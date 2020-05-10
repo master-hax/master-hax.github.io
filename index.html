@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>TrackBuddy</title>
+    <link rel="stylesheet" type="text/css" href="./style.css">
+    <script src="https://webrtchacks.github.io/adapter/adapter-latest.js"></script>
+    <script src="./TrackBuddyClient.js"></script>
+  </head>
+  <body>
+    <h1>TrackBuddyClient</h1>
+    <font id="serverStatus">UDP server is currently inactive</font>
+    <br>
+    <h2 id="mph"></h2>
+    <br>
+    <h2 id="kph"></h2>
+    <br>
+    <font id="rawTelemetry"></font>
+    <br>
+    <form>
+      <input type="text" name="sdp-offer">
+      <input type="button"></button>
+    </form>
+    <br>
+    <br>
+    <svg id="testsvg" viewBox="0 0 400 250" xmlns="http://www.w3.org/2000/svg">
+      <rect id="border" width="400" height="250" fill="black"></rect>
+      <rect id="gaugeBackground" width="380" height="230" fill="#292929" transform="translate(10,10)"></rect>
+      <rect id="rpmBar" fill="blue" width="0" height="230" transform="translate(10,10)"/>
+      <path d="M 0 75 Q 325 75 325 250 L 0 250 Z" fill="black" stroke="none"/>
+      <text id="svgtext" x="10" y="230" font-size="55" style="text-anchor: start; fill: white; stroke:none;">
+        00000
+      <tspan font-size="20">RPM</tspan>
+      </text>
+    </svg>
+  </body>
+</html>
