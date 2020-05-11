@@ -4,22 +4,31 @@
     <meta charset="UTF-8">
     <title>TrackBuddy</title>
     <link rel="stylesheet" type="text/css" href="./style.css">
-    <script src="https://webrtchacks.github.io/adapter/adapter-latest.js"></script>
-    <script src="./TrackBuddyClient.js"></script>
+    <script src="https://webrtchacks.github.io/adapter/adapter-latest.js" defer></script>
+    <script src="./TrackBuddyClient.js" defer></script>
   </head>
   <body>
     <h1>TrackBuddyClient</h1>
-    <font id="serverStatus">UDP server is currently inactive</font>
+    <h2><span id="server-status">disconnected</span></h2>
     <br>
-    <h2 id="mph"></h2>
+    <h3>webRTC signalling state: <span id="signalling-state">nothing yet</span></h3>
     <br>
-    <h2 id="kph"></h2>
+    <h3>webRTC connection state: <span id="connection-state">nothing yet</span></h3>
     <br>
     <font id="rawTelemetry"></font>
     <br>
-    <form>
-      <input type="text" name="sdp-offer">
-      <input type="button"></button>
+    <form id="sdp-form">
+      <label>SDP offer:</label>
+      <br>
+      <textarea id="sdp-offer-textarea" readonly></textarea>
+      <br>
+      <input type="button" id="regenerate-button" value="generate"></input>
+      <br><br>
+      <label>SDP answer:</label>
+      <br>
+      <textarea id="sdp-answer-textarea"></textarea>
+      <br>
+      <input type="button" id="connect-button" value="connect"></input>
     </form>
     <br>
     <br>
@@ -33,5 +42,11 @@
       <tspan font-size="20">RPM</tspan>
       </text>
     </svg>
+
+    <br>
+    <h2 id="mph"></h2>
+    <br>
+    <h2 id="kph"></h2>
+    <br>
   </body>
 </html>
