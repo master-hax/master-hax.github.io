@@ -6,7 +6,7 @@ body {
 
 #sdp-form textarea{
   width: 600px;
-  height: 250px;
+  height: 350px;
 }
 
 #testsvg {
@@ -32,4 +32,10 @@ body {
 
 #svgtext {
   font-family: dseg;
+}
+
+#logs {
+  position: fixed;
+  top: 0;
+  right: 0;
 }
