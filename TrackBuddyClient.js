@@ -1,8 +1,15 @@
 'use strict';
 
-const ICE_UFRAG = "V6j+"; 
+const WEBRTC_HOSTNAME_REMOTE = "TrackBuddyServer.local";
+
+const ICE_UFRAG_LOCAL = "V6j+"; 
 // const ICE_UFRAG = "driver"; 
-const ICE_PWD = "OEKutPgoHVk/99FfqPOf444w";
+const ICE_PWD_LOCAL = "OEKutPgoHVk/99FfqPOf444w";
+// const ICE_PWD = "oversteeroversteeroversteer";
+
+const ICE_UFRAG_REMOTE = "fKVhbscsMWDGAnBg"; 
+// const ICE_UFRAG = "driver"; 
+const ICE_PWD_REMOTE = "xGjQkAvKIVkBeVTGWcvCQtnVAeapczwa";
 // const ICE_PWD = "oversteeroversteeroversteer";
 
 const statusDisplay = this.document.querySelector('#server-status');
@@ -70,13 +77,13 @@ async function startWebRTC() {
         logInfo(`connection state change: ${peerConnection.connectionState}`);
         connectionStateElement.textContent = peerConnection.connectionState;
     };
-    peerConnection.onicecandidate = event => {
-        if (event.candidate) {
-            logInfo(`ice candidate: ${event.candidate.candidate}`)
-        } else {
-            logInfo("all ice candidates have been sent (?)")
-        }
-    };
+    // peerConnection.onicecandidate = event => {
+    //     if (event.candidate) {
+    //         logInfo(`ice candidate: ${event.candidate.candidate}`)
+    //     } else {
+    //         logInfo("all ice candidates have been sent (?)")
+    //     }
+    // };
     peerConnection.ondatachannel = event => {
         logInfo("we got a data channel? (why? wtf)")
     };
@@ -96,8 +103,8 @@ async function startWebRTC() {
         logInfo('negotiation needed');
         peerConnection.createOffer()
         .then(function(offer) {
-            offer.sdp = offer.sdp.replace(/^a=ice-ufrag.*$/m, `a=ice-ufrag:${ICE_UFRAG}`)
-            offer.sdp = offer.sdp.replace(/^a=ice-pwd.*$/m, `a=ice-pwd:${ICE_PWD}`)
+            offer.sdp = offer.sdp.replace(/^a=ice-ufrag.*$/m, `a=ice-ufrag:${ICE_UFRAG_LOCAL}`)
+            offer.sdp = offer.sdp.replace(/^a=ice-pwd.*$/m, `a=ice-pwd:${ICE_PWD_LOCAL}`)
             sdpOfferElement.textContent = offer.sdp;
             return peerConnection.setLocalDescription(offer);
         })
@@ -124,14 +131,20 @@ a=setup:passive
 a=mid:0
 a=sendrecv
 a=sctpmap:5000 webrtc-datachannel 1024
-a=ice-ufrag:${ICE_UFRAG}
-a=ice-pwd:${ICE_PWD}
-a=candidate:foundation 1 udp 2130706431 TrackBuddyServer.local 5000 typ host generation 0
-a=candidate:foundation 1 udp 2130706431 TrackBuddyServer.local 5001 typ host generation 0
-a=candidate:foundation 1 udp 2130706431 TrackBuddyServer.local 5002 typ host generation 0
-a=candidate:foundation 1 udp 2130706431 TrackBuddyServer.local 5003 typ host generation 0
-a=candidate:foundation 1 udp 2130706431 TrackBuddyServer.local 5004 typ host generation 0
-a=candidate:foundation 1 udp 2130706431 TrackBuddyServer.local 5005 typ host generation 0
+a=ice-ufrag:${ICE_UFRAG_REMOTE}
+a=ice-pwd:${ICE_PWD_REMOTE}
+a=candidate:foundation 1 udp 2130706431 ` + WEBRTC_HOSTNAME_REMOTE +
+` 5000 typ host generation 0
+a=candidate:foundation 1 udp 2130706431 ` + WEBRTC_HOSTNAME_REMOTE +
+` 5001 typ host generation 0
+a=candidate:foundation 1 udp 2130706431 ` + WEBRTC_HOSTNAME_REMOTE +
+` 5002 typ host generation 0
+a=candidate:foundation 1 udp 2130706431 ` + WEBRTC_HOSTNAME_REMOTE +
+` 5003 typ host generation 0
+a=candidate:foundation 1 udp 2130706431 ` + WEBRTC_HOSTNAME_REMOTE +
+` 5004 typ host generation 0
+a=candidate:foundation 1 udp 2130706431 ` + WEBRTC_HOSTNAME_REMOTE +
+` 5005 typ host generation 0
 a=end-of-candidates
 `
 
