@@ -3,7 +3,6 @@
   <head>
     <meta charset="UTF-8">
     <title>TrackBuddy</title>
-    <!-- <link rel="stylesheet" type="text/css" href="./style.css"> -->
     <script async src="https://webrtchacks.github.io/adapter/adapter-latest.js"></script>
     <script type="module">
 
@@ -22,6 +21,8 @@
 
 'use strict';
 
+var DEBUG = false;
+
 const WEBRTC_HOSTNAME_REMOTE = "TrackBuddyServer.local";
 
 const ICE_UFRAG_LOCAL = "V6j+"; 
@@ -34,105 +35,122 @@ const ICE_UFRAG_REMOTE = "fKVhbscsMWDGAnBg";
 const ICE_PWD_REMOTE = "xGjQkAvKIVkBeVTGWcvCQtnVAeapczwa";
 // const ICE_PWD = "oversteeroversteeroversteer";
 
-// const logInfo = thing => {this.console.log(thing); logElement.innerHTML += thing+'<br>'}
-const logInfo = thing => {console.log(thing);}
-const logError = thing => {logInfo(thing); statusDisplay.textContent = "error"}
+const logInfo = thing => {console.log(thing);};
+const logError = thing => {logInfo(thing); statusDisplay.textContent = "error"};
+const logDebug = thing => {if (DEBUG) {logInfo(thing);}};
 
 const statusDisplay = document.querySelector('#server-status');
 const connectionStateElement = document.querySelector('#connection-state');
 const signallingStateElement = document.querySelector('#signalling-state')
-const sdpOfferElement = document.querySelector('#sdp-offer-textarea');
-const sdpAnswerElement = document.querySelector('#sdp-answer-textarea');
-const regenerateButton = document.querySelector('#regenerate-button');
 const connectButton = document.querySelector('#connect-button');
-const logElement = document.querySelector('#logs');
 
 let peerConnection;
 let dataChannel;
 
 window.onload = function() {
 
-    if (!this.RTCPeerConnection) {
-        logError("browser does not have webRTC support!")
-        return;
-    }
-    if (!this.RTCPeerConnection.prototype.createDataChannel) {
-        logError("browser does not have webRTC data channel support!")
-        return;
-    }
-    if (!this.adapter) {
-        logError("adapter didn't load. stuff might not work. maybe.")
-    }
-    logInfo("confirmed webRTC support");
+  if (window.location.hash && window.location.hash.toLocaleLowerCase() === "#debug") {
+    DEBUG = true;
+    logInfo("debug mode enabled")
+  }
 
-    regenerateButton.onclick = function() {
-        sdpOfferElement.textContent = "";
-        sdpAnswerElement.textContent = "";
-        startWebRTC();
-    };
+  if (!this.RTCPeerConnection) {
+      logError("browser does not have webRTC support!")
+      return;
+  }
+  if (!this.RTCPeerConnection.prototype.createDataChannel) {
+      logError("browser does not have webRTC data channel support!")
+      return;
+  }
+  if (!this.adapter) {
+      logError("adapter didn't load. stuff might not work. maybe.")
+  }
+  logDebug("confirmed webRTC support");
 
-    connectButton.onclick = function () {
-        // if (dataChannel.readyState == "open") {
-        if (dataChannel.readyState === "open") {
-            logInfo("sending message");
-            dataChannel.send("HOWDY");
-        } else {
-            logInfo("data channel is not open");
-        }
-    }
+  connectButton.onclick = function() {
+      connectButton.value = "reconnect";
+      connectToServer();
+  };
+}
+
+function updateRpmGauge(telemetryData) {
+  let rpmBar = document.querySelector('#rpmBar');
+  let rpmText = document.querySelector('#rpmText');
+  if (!telemetryData.CurrentEngineRpm || !telemetryData.EngineMaxRpm) {
+    rpmBar.style.width = "0%";
+    rpmText.textContent = "00000";
+    return;
+  }
+  rpmBar.style.width = telemetryData.CurrentEngineRpm / telemetryData.EngineMaxRpm * 100 + "%";
+  let rpmDisplayNumber = Math.trunc(telemetryData.CurrentEngineRpm);
+  if (rpmDisplayNumber < 9999) {
+    rpmDisplayNumber = "0" + rpmDisplayNumber;
+  }
+  rpmText.textContent = rpmDisplayNumber;
 }
 
 // thanks https://github.com/pion/offline-browser-communication for the initial setup
-function startWebRTC() {
+function connectToServer() {
 
     if (peerConnection !== undefined) {
-        logInfo("closing existing peer connection");
-        peerConnection.close();
+      logDebug("closing existing peer connection");
+      peerConnection.close();
+      statusDisplay.textContent = "disconnected";
     }
 
-    logInfo("creating new peer connection");
+    logDebug("creating new peer connection");
     peerConnection = new RTCPeerConnection();
     peerConnection.onsignalingstatechange = event => {
-        logInfo(`signaling state change: ${peerConnection.signalingState}`);
-        signallingStateElement.textContent = peerConnection.signalingState;
+        logDebug(`signaling state change: ${peerConnection.signalingState}`);
     };
     peerConnection.onconnectionstatechange = event => {
-        logInfo(`connection state change: ${peerConnection.connectionState}`);
-        connectionStateElement.textContent = peerConnection.connectionState;
-    };
-    // peerConnection.onicecandidate = event => {
-    //     if (event.candidate) {
-    //         logInfo(`ice candidate: ${event.candidate.candidate}`)
-    //     } else {
-    //         logInfo("all ice candidates have been sent (?)")
-    //     }
-    // };
-    peerConnection.ondatachannel = event => {
-        logInfo("we got a data channel? (why? wtf)")
+      let connectionState = peerConnection.connectionState;
+      if (connectionState === "connecting" || connectionState === "connected") {
+        statusDisplay.textContent = connectionState;
+      }
+      else if (connectionState === "closed" || connectionState === "disconnected") {
+        statusDisplay.textContent = "disconnected";
+      }
+
+      if (connectionState === "failed") {
+        logError("connection failed");
+      }
+      else {
+        logDebug(`connection state change: ${connectionState}`);
+      }
     };
 
     dataChannel = peerConnection.createDataChannel('telemetry');
     dataChannel.onclose = event => {
-        logInfo("data channel opened");
+        logDebug("data channel closed");
     };
-    dataChannel.onopen =  event => {
-        logInfo("data channel closed");
+    dataChannel.onopen = event => {
+        logDebug("data channel open");
     };
     dataChannel.onmessage = event => {
-        logInfo(`got message on data channel: ${event.data}`);
+        let obj;
+        if (event.data) {
+          try {
+            obj = JSON.parse(event.data)
+          } catch (e) {
+            logInfo(e)
+            return;
+          }
+        }
+        updateRpmGauge(obj);
     };
 
     peerConnection.onnegotiationneeded = event => {
-        logInfo('negotiation needed');
+        logDebug('negotiation needed');
         peerConnection.createOffer()
         .then(function(offer) {
             offer.sdp = offer.sdp.replace(/^a=ice-ufrag.*$/m, `a=ice-ufrag:${ICE_UFRAG_LOCAL}`)
             offer.sdp = offer.sdp.replace(/^a=ice-pwd.*$/m, `a=ice-pwd:${ICE_PWD_LOCAL}`)
-            sdpOfferElement.textContent = offer.sdp;
+            logInfo("local SDP offer is:\n\n" + offer.sdp);
             return peerConnection.setLocalDescription(offer);
         })
         .then(function() {
-            sdpAnswerElement.textContent = predefinedRemoteAnswer;
+            logInfo("predefined remote SDP answer is:\n\n" + predefinedRemoteAnswer);
             return peerConnection.setRemoteDescription(
                 new RTCSessionDescription({type: "answer",  sdp: predefinedRemoteAnswer})
             );
@@ -171,18 +189,12 @@ a=candidate:foundation 1 udp 2130706431 ` + WEBRTC_HOSTNAME_REMOTE +
 a=end-of-candidates
 `
 // ASCII art generated from https://textkool.com
-
     </script>
     <style>
 body {
   color: white;
   background-color: #292929;
   overflow: auto;
-}
-
-#sdp-form textarea{
-  width: 600px;
-  height: 350px;
 }
 
 #testsvg {
@@ -192,13 +204,8 @@ body {
   font-family: dseg;
 }
 
-#testsvg:hover #rpmBar {
-  fill: red;
-  width: 95%;
-}
-
-#rpmBar {
-  transition: width 2s, background-color 3s;
+#testsvg #rpmBar{
+  fill: white;
 }
 
 @font-face {
@@ -209,44 +216,22 @@ body {
 #svgtext {
   font-family: dseg;
 }
-
-#logs {
-  position: fixed;
-  top: 0;
-  right: 0;
-}
     </style>
   </head>
   <body>
     <h1>TrackBuddyClient</h1>
     <h2><span id="server-status">disconnected</span></h2>
     <br>
-    <h3>webRTC signalling state: <span id="signalling-state">nothing yet</span></h3>
-    <br>
-    <h3>webRTC connection state: <span id="connection-state">nothing yet</span></h3>
-    <br>
-    <form id="sdp-form">
-      <label>local SDP offer:</label>
-      <br>
-      <textarea id="sdp-offer-textarea" readonly></textarea>
-      <br>
-      <input type="button" id="regenerate-button" value="generate"></input>
-      <br><br>
-      <label>remote SDP answer:</label>
-      <br>
-      <textarea id="sdp-answer-textarea"></textarea>
-      <br>
-      <input type="button" id="connect-button" value="connect"></input>
-    </form>
+    <input type="button" id="connect-button" value="connect"></input>
     <br>
     <br>
     <svg id="testsvg" viewBox="0 0 400 250" xmlns="http://www.w3.org/2000/svg">
       <rect id="border" width="400" height="250" fill="black"></rect>
       <rect id="gaugeBackground" width="380" height="230" fill="#292929" transform="translate(10,10)"></rect>
-      <rect id="rpmBar" fill="blue" width="0" height="230" transform="translate(10,10)"/>
+      <rect id="rpmBar" width="0" height="230" transform="translate(10,10)"/>
       <path d="M 0 75 Q 325 75 325 250 L 0 250 Z" fill="black" stroke="none"/>
-      <text id="svgtext" x="10" y="230" font-size="55" style="text-anchor: start; fill: white; stroke:none;">
-        00000
+      <text x="10" y="230" font-size="55" style="text-anchor: start; fill: white; stroke:none;">
+      <tspan id="rpmText">00000</tspan>
       <tspan font-size="20">RPM</tspan>
       </text>
     </svg>
@@ -255,7 +240,5 @@ body {
     <h2 id="mph"></h2>
     <br>
     <h2 id="kph"></h2>
-    <br>
-    <div id="logs">logs:<br></div>
   </body>
 </html>
