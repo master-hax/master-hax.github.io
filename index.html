@@ -3,7 +3,8 @@
   <head>
     <meta charset="UTF-8">
     <title>TrackBuddy</title>
-    <script async src="https://webrtchacks.github.io/adapter/adapter-latest.js"></script>
+    <script src="https://webrtchacks.github.io/adapter/adapter-latest.js"></script>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
     <script type="module">
 
 //   _____                         _      ____                _       _
@@ -71,6 +72,19 @@ window.onload = function() {
       connectButton.value = "reconnect";
       connectToServer();
   };
+
+  let dragBehavior = d3.drag()
+  .on("start", (d) => {
+      d3.select(this).attr("stroke", "red");
+  })
+  .on("drag", (d) => {
+    d.x += d3.event.dx;
+    d.y += d3.event.dy;
+    d3.select(this)
+            .attr('transform', 'translate(' + d.x + ',' + d.y + ')');
+  });
+
+  d3.select("#testsvg").call(dragBehavior);
 }
 
 function updateRpmGauge(telemetryData) {
@@ -150,20 +164,28 @@ function connectToServer() {
             return peerConnection.setLocalDescription(offer);
         })
         .then(function() {
-            logInfo("predefined remote SDP answer is:\n\n" + predefinedRemoteAnswer);
-            return peerConnection.setRemoteDescription(
-                new RTCSessionDescription({type: "answer",  sdp: predefinedRemoteAnswer})
-            );
+          if (!exists(WEBRTC_HOSTNAME_REMOTE)) {
+            logError("TrackBuddyServer hostname not specified");
+            return;
+          }
+          logInfo("predefined remote SDP answer is:\n\n" + predefinedRemoteAnswer);
+          return peerConnection.setRemoteDescription(
+              new RTCSessionDescription({type: "answer",  sdp: predefinedRemoteAnswer})
+          );
         })
         .catch(logInfo);
     };
+}
+
+function exists(obj) {
+  return !(typeof obj === 'undefined' || obj === null);
 }
 
 const predefinedRemoteAnswer = `v=0
 o=- 521628857 1575883112 IN IP4 0.0.0.0
 s=-
 t=0 0
-a=fingerprint:sha-256 53:59:1A:45:F2:A8:21:62:71:D5:6F:3E:A2:F6:6D:4F:EF:46:0F:44:92:A0:EA:F1:45:02:6F:EF:0F:FE:58:9C
+a=fingerprint:sha-256 6b:6a:a6:18:df:88:52:79:7b:10:63:c3:4c:4d:f4:d0:e6:45:e6:ef:b2:fa:18:41:fc:42:8b:a1:c8:45:0b:8e
 a=group:BUNDLE 0
 a=ice-lite
 m=application 9 DTLS/SCTP 5000
@@ -225,7 +247,7 @@ body {
     <input type="button" id="connect-button" value="connect"></input>
     <br>
     <br>
-    <svg id="testsvg" viewBox="0 0 400 250" xmlns="http://www.w3.org/2000/svg">
+    <svg id="testsvg" class="gauge" viewBox="0 0 400 250" xmlns="http://www.w3.org/2000/svg">
       <rect id="border" width="400" height="250" fill="black"></rect>
       <rect id="gaugeBackground" width="380" height="230" fill="#292929" transform="translate(10,10)"></rect>
       <rect id="rpmBar" width="0" height="230" transform="translate(10,10)"/>
