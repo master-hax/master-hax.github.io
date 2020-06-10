@@ -26,16 +26,6 @@ var DEBUG = false;
 
 // const WEBRTC_HOSTNAME_REMOTE = "TrackBuddyServer.local";
 
-// const ICE_UFRAG_LOCAL = "V6j+"; 
-// // const ICE_UFRAG = "driver"; 
-// const ICE_PWD_LOCAL = "OEKutPgoHVk/99FfqPOf444w";
-// // const ICE_PWD = "oversteeroversteeroversteer";
-
-// const ICE_UFRAG_REMOTE = "fKVhbscsMWDGAnBg"; 
-// // const ICE_UFRAG = "driver"; 
-// const ICE_PWD_REMOTE = "xGjQkAvKIVkBeVTGWcvCQtnVAeapczwa";
-// // const ICE_PWD = "oversteeroversteeroversteer";
-
 const logInfo = thing => {console.log(thing);};
 const logError = thing => {logInfo(thing); statusDisplay.textContent = "error"};
 const logDebug = thing => {if (DEBUG) {logInfo(thing);}};
@@ -88,23 +78,6 @@ window.onload = function() {
   d3.select("#testsvg").call(dragBehavior);
 }
 
-function updateRpmGauge(telemetryData) {
-  let rpmBar = document.querySelector('#rpmBar');
-  let rpmText = document.querySelector('#rpmText');
-  if (!telemetryData.CurrentEngineRpm || !telemetryData.EngineMaxRpm) {
-    rpmBar.style.width = "0%";
-    rpmText.textContent = "00000";
-    return;
-  }
-  rpmBar.style.width = telemetryData.CurrentEngineRpm / telemetryData.EngineMaxRpm * 100 + "%";
-  let rpmDisplayNumber = Math.trunc(telemetryData.CurrentEngineRpm);
-  if (rpmDisplayNumber < 9999) {
-    rpmDisplayNumber = "0" + rpmDisplayNumber;
-  }
-  rpmText.textContent = rpmDisplayNumber;
-}
-
-// thanks https://github.com/pion/offline-browser-communication for the initial setup
 function connectToServer(remoteServerAddress) {
 
     if (exists(peerConnection)) {
@@ -204,6 +177,22 @@ function sendCandidateToServer(candidate, remoteServerAddress, peerConnection) {
   request.send(candidate);
 }
 
+function updateRpmGauge(telemetryData) {
+  let rpmBar = document.querySelector('#rpmBar');
+  let rpmText = document.querySelector('#rpmText');
+  if (!telemetryData.CurrentEngineRpm || !telemetryData.EngineMaxRpm) {
+    rpmBar.style.width = "0%";
+    rpmText.textContent = "00000";
+    return;
+  }
+  rpmBar.style.width = telemetryData.CurrentEngineRpm / telemetryData.EngineMaxRpm * 100 + "%";
+  let rpmDisplayNumber = Math.trunc(telemetryData.CurrentEngineRpm);
+  if (rpmDisplayNumber < 9999) {
+    rpmDisplayNumber = "0" + rpmDisplayNumber;
+  }
+  rpmText.textContent = rpmDisplayNumber;
+}
+
 function exists(obj) {
   return !(typeof obj === 'undefined' || obj === null);
 }
@@ -217,14 +206,14 @@ body {
   overflow: auto;
 }
 
-#testsvg {
+#rpmGauge {
   width: 400px;
   height: 250px;
   stroke: 30px black;
   font-family: dseg;
 }
 
-#testsvg #rpmBar{
+#rpmBar{
   fill: white;
 }
 
@@ -243,11 +232,11 @@ body {
     <h2><span id="server-status">disconnected</span></h2>
     <br>
     <label>TrackBuddyServer address</label>
-    <input type=text id="remote-address">
+    <input type=text id="remote-address" value="http://">
     <input type="button" id="connect-button" value="connect"></input>
     <br>
     <br>
-    <svg id="testsvg" class="gauge" viewBox="0 0 400 250" xmlns="http://www.w3.org/2000/svg">
+    <svg id="rpmGauge" class="gauge" viewBox="0 0 400 250" xmlns="http://www.w3.org/2000/svg">
       <rect id="border" width="400" height="250" fill="black"></rect>
       <rect id="gaugeBackground" width="380" height="230" fill="#292929" transform="translate(10,10)"></rect>
       <rect id="rpmBar" width="0" height="230" transform="translate(10,10)"/>
