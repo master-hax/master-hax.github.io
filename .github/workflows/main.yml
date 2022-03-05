@@ -1,4 +1,4 @@
-name: IPFS
+name: IPFS publishing
 
 on:
   push:
