@@ -1,4 +1,4 @@
-name: CI
+name: IPFS
 
 on:
   push:
@@ -18,10 +18,6 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
-
-      # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: echo Hello, world!
 
       - name: upload to IPFS
         uses: aquiladev/ipfs-action@v0.2.0
