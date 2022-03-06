@@ -24,3 +24,5 @@ jobs:
         with:
           path: ${{ github.workspace }}
           key: "publishing_key"
+          timeout: 90000
+          verbose: true
