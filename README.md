@@ -4,4 +4,4 @@
 
 [![IPFS publishing](https://github.com/master-hax/master-hax.github.io/actions/workflows/main.yml/badge.svg)](https://github.com/master-hax/master-hax.github.io/actions/workflows/main.yml)
 
-accessible at [https://vivek.revankar.net]() or [ipfs://vivek.revankar.net]()
+accessible at [https://vivek.revankar.net](https://vivek.revankar.net) or [ipfs://vivek.revankar.net](ipfs://vivek.revankar.net)
