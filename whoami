@@ -6,13 +6,12 @@
         document.close();
       }
       window.fetch("https://vivek.revankar.net/whoami")
-        .then(function(response) {
-            return response.json();
-        }).then(function(data) {
+        .then(response => response.text())
+        .then(data => {
             console.log(data);
             replaceContent(data);
-        }).catch(function() {
-            console.log("Booo");
+        }).catch(err => {
+            console.log("failed with error " + err);
             replaceContent("failed to fetch :(")
         });
     </script>
