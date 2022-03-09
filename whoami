@@ -1,0 +1,19 @@
+<html>
+    <script language="Javascript">
+      function replaceContent(newContent) {
+        document.open();
+        document.write(newContent);
+        document.close();
+      }
+      window.fetch("https://vivek.revankar.net/whoami")
+        .then(function(response) {
+            return response.json();
+        }).then(function(data) {
+            console.log(data);
+            replaceContent(data);
+        }).catch(function() {
+            console.log("Booo");
+            replaceContent("failed to fetch :(")
+        });
+    </script>
+</html>
