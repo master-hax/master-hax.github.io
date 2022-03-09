@@ -11,7 +11,6 @@
             replaceContent(data);
         }).catch(err => {
             console.log("request failed with error " + err);
-            replaceContent("")
         });
     </script>
 </html>
